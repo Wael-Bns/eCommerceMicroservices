@@ -38,8 +38,6 @@ var app = builder.Build();
 
 app.UseExceptionHandlingMiddleware();
 
-app.UseHttpsRedirection();
-
 // adding the minimal api
 app.UseCors();
 app.AddProductMinimalApiEndpoints();

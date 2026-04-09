@@ -18,9 +18,18 @@ namespace ProductsService.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             //Add the DbContext and Repository to the DI container
+            string temproaryConnectionString = configuration.GetConnectionString("MySqlConnection")!;
+            
+            string connectionString = temproaryConnectionString
+                .Replace("$MYSQL_HOST",Environment.GetEnvironmentVariable("MYSQL_HOST")!)
+                .Replace("$MYSQL_PASSWORD", Environment.GetEnvironmentVariable("MYSQL_PASSWORD")!)
+                .Replace("$MYSQL_USER", Environment.GetEnvironmentVariable("MYSQL_USER")!)
+                .Replace("$MYSQL_DATABASE", Environment.GetEnvironmentVariable("MYSQL_DATABASE")!)
+                .Replace("$MYSQL_PORT", Environment.GetEnvironmentVariable("MYSQL_PORT")!);
+
             services.AddDbContext<MySqlDbContext>(options =>
             {
-                options.UseMySQL(configuration.GetConnectionString("MySqlConnection")!);
+                options.UseMySQL(connectionString);
             });
 
             services.AddTransient<IProductsRepository, ProductsRepository>();

@@ -3,18 +3,28 @@
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development",
+            "MYSQL_HOST": "localhost",
+            "MYSQL_PORT": "3306",
+            "MYSQL_DATABASE": "ProductsDb",
+            "MYSQL_USER": "root",
+            "MYSQL_PASSWORD": "wael"
+        },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5201"
     },
     "https": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development",
+            "MYSQL_HOST": "localhost",
+            "MYSQL_PORT": "3306",
+            "MYSQL_DATABASE": "ProductsDb",
+            "MYSQL_USER": "root",
+            "MYSQL_PASSWORD": "wael"
+        },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7048;http://localhost:5201"
     },
