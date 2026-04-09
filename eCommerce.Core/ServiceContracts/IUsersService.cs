@@ -16,5 +16,11 @@ namespace eCommerce.Core.ServiceContracts
         /// <param name="registerRequest"></param>
         /// <returns></returns>
         Task<AuthenticationResponse?> Register(RegisterRequest registerRequest);
+        /// <summary>
+        /// Get user details by userID
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <returns></returns>
+        Task<UserDTO?> GetUserByUserID(Guid userID);
     }
 }

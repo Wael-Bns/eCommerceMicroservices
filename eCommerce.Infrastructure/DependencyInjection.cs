@@ -16,8 +16,8 @@ namespace eCommerce.Infrastructure
         {
             // TO DO: Add services to the IoC container
             // Infrastructure services often include data access, caching, and other low-level components 
+            services.AddTransient<DapperDbContext>();
             services.AddTransient<IUsersRepository,UsersRepository>();
-            services.AddScoped<DapperDbContext>();
             return services;
         }
     }

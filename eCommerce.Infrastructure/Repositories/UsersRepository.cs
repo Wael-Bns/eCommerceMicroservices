@@ -18,7 +18,8 @@ namespace eCommerce.Infrastructure.Repositories
             Guid userID = Guid.NewGuid();
             string query = "INSERT INTO public.\"Users\" (\"UserID\", \"Email\", \"Password\", \"PersonName\", \"Gender\")" +
                             " VALUES (@UserID, @Email, @Password, @PersonName, @Gender)";
-            int rowsAffected = await _dbContext.DbConnection.ExecuteAsync(query, user);
+            using var connection = _dbContext.GetDbConnection();
+            int rowsAffected = await connection.ExecuteAsync(query, user);
 
             if(rowsAffected > 0)
             {
@@ -30,7 +31,17 @@ namespace eCommerce.Infrastructure.Repositories
         public async Task<ApplicationUser?> GetUserByEmailAndPassword(string? email, string? password)
         {
             string query = "SELECT * FROM public.\"Users\" WHERE \"Email\" = @Email AND \"Password\" = @Password";
-            ApplicationUser? user = await _dbContext.DbConnection.QueryFirstOrDefaultAsync<ApplicationUser>(query, new { Email = email, Password = password });
+            using var connection = _dbContext.GetDbConnection();
+            ApplicationUser? user = await connection.QueryFirstOrDefaultAsync<ApplicationUser>(query, new { Email = email, Password = password });
+            return user;
+        }
+
+        public async Task<ApplicationUser?> GetUserByUserID(Guid userID)
+        {
+            string query = "SELECT * FROM public.\"Users\" WHERE \"UserID\" = @UserID";
+            var parameters = new { UserID = userID };
+            using var connection = _dbContext.GetDbConnection();
+            ApplicationUser? user = await connection.QueryFirstOrDefaultAsync<ApplicationUser>(query, parameters);
             return user;
         }
     }

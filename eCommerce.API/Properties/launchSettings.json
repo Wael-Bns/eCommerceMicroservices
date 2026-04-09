@@ -3,18 +3,28 @@
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development",
+            "POSTGRES_HOST":"localhost",
+            "POSTGRES_PASSWORD":"wael",
+            "POSTGRES_DATABASE":"eCommerceUsers",
+            "POSTGRES_USER":"postgres",
+            "POSTGRES_PORT":"5432"
+        },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5291"
     },
     "https": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development",
+            "POSTGRES_HOST": "localhost",
+            "POSTGRES_PASSWORD": "wael",
+            "POSTGRES_DATABASE": "eCommerceUsers",
+            "POSTGRES_USER": "postgres",
+            "POSTGRES_PORT": "5432"
+        },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7176;http://localhost:5291"
     },

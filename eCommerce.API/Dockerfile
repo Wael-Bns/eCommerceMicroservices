@@ -26,5 +26,10 @@ RUN dotnet publish "./eCommerce.API.csproj" -c $BUILD_CONFIGURATION -o /app/publ
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
+ENV POSTGRES_HOST=localhost
+ENV POSTGRES_PASSWORD=wael
+ENV POSTGRES_DATABASE=eCommerceUsers
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PORT=5432
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "eCommerce.API.dll"]

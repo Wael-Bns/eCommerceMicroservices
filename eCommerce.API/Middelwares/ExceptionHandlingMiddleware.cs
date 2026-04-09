@@ -27,7 +27,6 @@ namespace eCommerce.API.Middelwares
                 _logger.LogError($"{ex.GetType()} : {ex.Message}");
                 httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await httpContext.Response.WriteAsJsonAsync(new {Message = ex.Message, Type = ex.GetType().Name});
-
             }
         }
     }
