@@ -1,4 +1,6 @@
 ﻿using System.Net.Http.Json;
+using DnsClient.Internal;
+using Microsoft.Extensions.Logging;
 using OrdersMicroservice.Core.DTO;
 
 namespace OrdersMicroservice.Core.HttpClients
@@ -6,9 +8,11 @@ namespace OrdersMicroservice.Core.HttpClients
     public class UsersMicroserviceClient
     {
         private readonly HttpClient _httpClient;
-        public UsersMicroserviceClient(HttpClient httpClient)
+        private readonly ILogger<UsersMicroserviceClient> _logger;
+        public UsersMicroserviceClient(HttpClient httpClient, ILogger<UsersMicroserviceClient> logger)
         {
             _httpClient = httpClient;
+            _logger = logger;
         }
 
         public async Task<UserDTO?> GetUserByUserID(Guid userID)
@@ -20,13 +24,13 @@ namespace OrdersMicroservice.Core.HttpClients
                 {
                     return null;
                 }
-                else if(response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                else if(response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                 {
-                    throw new HttpRequestException("Bad request",null, System.Net.HttpStatusCode.BadRequest);
+                    throw new HttpRequestException("Bad Request.",null, System.Net.HttpStatusCode.BadRequest);
                 }
                 else
                 {
-                    throw new HttpRequestException("Http request failed .", null, response.StatusCode);
+                    return new UserDTO(Guid.Empty, "Temporarily Unavailable", "Temporarily Unavailable", "Temporarily Unavailable");
                 }
             }
 

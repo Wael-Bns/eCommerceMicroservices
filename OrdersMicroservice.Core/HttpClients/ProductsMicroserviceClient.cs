@@ -21,7 +21,7 @@ namespace OrdersMicroservice.Core.HttpClients
                 }
                 else if(response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
                 {
-                    throw new HttpRequestException("Bad request",null, System.Net.HttpStatusCode.BadRequest);
+                    throw new HttpRequestException("An internal error occurred in the products microservice",null, System.Net.HttpStatusCode.BadRequest);
                 }
                 else
                 {

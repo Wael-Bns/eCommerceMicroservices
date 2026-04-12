@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using OrdersMicroservice.API.Middlewares;
 using OrdersMicroservice.Core;
 using OrdersMicroservice.Core.HttpClients;
+using OrdersMicroservice.Core.Policies;
 using OrdersMicroservice.Infrastructure;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,12 +34,21 @@ builder.Services.AddCors(options => {
                .AllowAnyHeader();
     });
 });
+
+builder.Services.AddTransient<IUsersMicroservicePolicies,UsersMicroservicePolicies>();
+
 // Add Http client
 builder.Services.AddHttpClient<UsersMicroserviceClient>(client =>
 {
     client.BaseAddress = new Uri($"http://{builder.Configuration["UsersMicroserviceName"]}" +
         $":{builder.Configuration["UsersMicroservicePort"]}");
-});
+}).AddPolicyHandler(
+    builder.Services.BuildServiceProvider()
+    .GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy()
+    ).AddPolicyHandler(
+    builder.Services.BuildServiceProvider()
+    .GetRequiredService<IUsersMicroservicePolicies>().GetCircuitBreakerPolicy()
+);
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(client =>
 {
     client.BaseAddress = new Uri($"http://{builder.Configuration["ProductsMicroserviceName"]}" +

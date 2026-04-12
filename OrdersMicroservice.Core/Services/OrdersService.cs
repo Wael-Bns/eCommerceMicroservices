@@ -71,13 +71,38 @@ namespace OrdersMicroservice.Core.Services
             ArgumentNullException.ThrowIfNull(filter, nameof(filter));
             // Get the order based on the filter
             Order? order = await _ordersRepository.GetOrderByCondition(filter);
-            return _mapper.Map<OrderResponse?>(order);
+            OrderResponse? orderResponse = _mapper.Map<OrderResponse?>(order);
+            if (orderResponse != null)
+            {
+                foreach (OrderItemResponse orderItem in orderResponse.OrderItems)
+                {
+                    ProductDTO? productDTO = await _productsMicroserviceClient.GetProductByProductID(orderItem.ProductID);
+                    if (productDTO == null)
+                        continue;
+                    _mapper.Map<ProductDTO, OrderItemResponse>(productDTO, orderItem);
+                }
+            }
+
+            return orderResponse;   
         }
 
         public async Task<List<OrderResponse>> GetOrders()
         {
             List<Order> orders = (await _ordersRepository.GetOrders()).ToList();
-            return _mapper.Map<List<OrderResponse>>(orders);
+            List<OrderResponse> orderResponses = _mapper.Map<List<OrderResponse>>(orders);
+            foreach(OrderResponse orderResponse in orderResponses)
+            {
+                if (orderResponse == null)
+                    continue;
+                foreach(OrderItemResponse orderItem in orderResponse.OrderItems)
+                {
+                    ProductDTO? productDTO = await _productsMicroserviceClient.GetProductByProductID(orderItem.ProductID);
+                    if (productDTO == null)
+                        continue;
+                    _mapper.Map<ProductDTO, OrderItemResponse>(productDTO, orderItem);
+                }
+            }
+            return orderResponses.ToList();
         }
 
         public async Task<List<OrderResponse>> GetOrdersByCondition(Expression<Func<Order, bool>> filter)
@@ -86,7 +111,21 @@ namespace OrdersMicroservice.Core.Services
             ArgumentNullException.ThrowIfNull(filter,nameof(filter));
             // Get the orders based on the filter
             List<Order> orders = (await _ordersRepository.GetOrdersByCondition(filter)).ToList()!;
-            return _mapper.Map<List<OrderResponse>>(orders);
+            // Map the orders to order responses
+            List<OrderResponse> orderResponses = _mapper.Map<List<OrderResponse>>(orders);
+            foreach (OrderResponse orderResponse in orderResponses)
+            {
+                if (orderResponse == null)
+                    continue;
+                foreach (OrderItemResponse orderItem in orderResponse.OrderItems)
+                {
+                    ProductDTO? productDTO = await _productsMicroserviceClient.GetProductByProductID(orderItem.ProductID);
+                    if (productDTO == null)
+                        continue;
+                    _mapper.Map<ProductDTO, OrderItemResponse>(productDTO, orderItem);
+                }
+            }
+            return orderResponses.ToList();
         }
 
         public async Task<OrderResponse?> UpdateOrder(OrderUpdateRequest orderUpdateRequest)
