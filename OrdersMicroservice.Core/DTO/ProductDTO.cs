@@ -4,6 +4,6 @@
         string ProductName,
         string Category,
         double? UnitPrice,
-        int? QuantityStock
+        int? QuantityInStock
     );
 }

@@ -2,7 +2,8 @@ using System.Text.Json.Serialization;
 using OrdersMicroservice.API.Middlewares;
 using OrdersMicroservice.Core;
 using OrdersMicroservice.Core.HttpClients;
-using OrdersMicroservice.Core.Policies;
+using OrdersMicroservice.Core.Policies.PoliciesContracts;
+using OrdersMicroservice.Core.Policies.PoliciesImplementations;
 using OrdersMicroservice.Infrastructure;
 using Polly;
 
@@ -35,25 +36,29 @@ builder.Services.AddCors(options => {
     });
 });
 
+// Register policies for Http clients
+builder.Services.AddTransient<IPollyPolicies, PollyPolicies>();
 builder.Services.AddTransient<IUsersMicroservicePolicies,UsersMicroservicePolicies>();
+builder.Services.AddTransient<IProductsMicroservicePolicies, ProductsMicroservicePolicies>();
 
-// Add Http client
+// Add UsersMicroservice Http client
 builder.Services.AddHttpClient<UsersMicroserviceClient>(client =>
 {
     client.BaseAddress = new Uri($"http://{builder.Configuration["UsersMicroserviceName"]}" +
         $":{builder.Configuration["UsersMicroservicePort"]}");
 }).AddPolicyHandler(
     builder.Services.BuildServiceProvider()
-    .GetRequiredService<IUsersMicroservicePolicies>().GetRetryPolicy()
-    ).AddPolicyHandler(
-    builder.Services.BuildServiceProvider()
-    .GetRequiredService<IUsersMicroservicePolicies>().GetCircuitBreakerPolicy()
+    .GetRequiredService<IUsersMicroservicePolicies>().GetCombinedPolicy()
 );
+// Add ProductsMicroservice Http client
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(client =>
 {
     client.BaseAddress = new Uri($"http://{builder.Configuration["ProductsMicroserviceName"]}" +
         $":{builder.Configuration["ProductsMicroservicePort"]}");
-});
+}).AddPolicyHandler(
+    builder.Services.BuildServiceProvider()
+    .GetRequiredService<IProductsMicroservicePolicies>().GetCombinedPolicy()
+    );
 
 
 var app = builder.Build();
@@ -69,10 +74,5 @@ app.UseCors();
 //Enable Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
-
-//Auth
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.Run();

@@ -39,7 +39,7 @@ namespace OrdersMicroservice.Core.Services
             {
                 throw new ArgumentException("User Id provided in the order request does not exist", nameof(orderAddRequest.UserID));
             }
-
+            orderAddRequest.UserID = foundUser.UserID;
             // Validate if the products exist by calling the products microservice
             foreach (var item in orderAddRequest.OrderItems)
             {
@@ -48,6 +48,7 @@ namespace OrdersMicroservice.Core.Services
                 {
                     throw new ArgumentException($"Product Id {item.ProductID} provided in the order request does not exist", nameof(item.ProductID));
                 }
+                _mapper.Map<ProductDTO, OrderItemAddRequest>(foundProduct, item);
             }
 
             // Add the order if no exception has occurred during validation

@@ -20,6 +20,12 @@ namespace OrdersMicroservice.Core
             services.AddAutoMapper(cfg => {
                 cfg.AddMaps(Assembly.GetExecutingAssembly());
             });
+            services.AddStackExchangeRedisCache(options =>
+            {
+                string redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
+                string redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
+                options.Configuration = $"{redisHost}:{redisPort}"; 
+            });
             return services;
         }
     }

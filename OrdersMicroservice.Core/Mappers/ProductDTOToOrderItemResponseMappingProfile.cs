@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using OrdersMicroservice.Core.DTO;
-using OrdersMicroservice.Core.Entities;
 
 namespace OrdersMicroservice.Core.Mappers
 {
