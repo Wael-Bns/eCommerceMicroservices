@@ -13,6 +13,8 @@ services:
       - UsersMicroservicePort=8080
       - ProductsMicroserviceName=products-microservice
       - ProductsMicroservicePort=8080
+      - REDIS_HOST=redis-container
+      - REDIS_PORT=6379  
     ports:
       - "7000:8080"
     networks:
@@ -71,7 +73,7 @@ services:
         - POSTGRES_PORT=5432
         - POSTGRES_DATABASE=eCommerceUsers
         - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=wael
+        - POSTGRES_PASSWORD=wael  
     ports:
         - "5000:8080"
     networks:
@@ -92,7 +94,25 @@ services:
         - ../postgres-init:/docker-entrypoint-initdb.d
     networks:
       - users-postgres-network
-      
+
+  redis-container:
+    image: redis:latest
+    ports:
+        - "6379:6379"
+    networks:
+        - ecommerce-network
+  
+  api-gateway:
+    image: api-gateway
+    build:
+        context: .
+        dockerfile: ApiGateway/Dockerfile
+    ports:
+        - "4000:8080"
+    networks:
+        - ecommerce-network
+
+
 networks:
    orders-mongodb-network:
      driver: bridge  
