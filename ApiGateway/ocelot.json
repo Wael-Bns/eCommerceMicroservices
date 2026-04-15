@@ -1,15 +1,147 @@
 {
     "Routes": [
         {
-            "UpstreamPathTemplate": "/gateway/Orders",
-            "DownstreamPathTemplate": "/api/Orders",
+            "UpstreamPathTemplate": "/gateway/orders",
+            "DownstreamPathTemplate": "/api/orders",
             "DownstreamHostAndPorts": [
                 {
                     "Host": "ordersmicroservice.api",
                     "Port": 8080
                 }
             ],
-            "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+            "UpstreamHttpMethod": [ "GET", "POST", "PUT", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/orders/search/productid/{productId}",
+            "DownstreamPathTemplate": "/api/orders/search/productid/{productId}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "ordersmicroservice.api",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/orders/search/orderid/{orderId}",
+            "DownstreamPathTemplate": "/api/orders/search/orderid/{orderId}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "ordersmicroservice.api",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/orders/search/orderdate/{orderDate}",
+            "DownstreamPathTemplate": "/api/orders/search/orderdate/{orderDate}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "ordersmicroservice.api",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/orders/{orderId}",
+            "DownstreamPathTemplate": "/api/orders/{orderId}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "ordersmicroservice.api",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "DELETE", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/products",
+            "DownstreamPathTemplate": "/api/products",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "products-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "POST", "PUT", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/products/search/product-id/{productId}",
+            "DownstreamPathTemplate": "/api/products/search/product-id/{productId}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "products-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/products/search/{searchString}",
+            "DownstreamPathTemplate": "/api/products/search/{searchString}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "products-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/products/{productId}",
+            "DownstreamPathTemplate": "/api/products/{productId}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "products-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "DELETE", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/Auth/login",
+            "DownstreamPathTemplate": "/api/Auth/login",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "users-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "POST", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/Auth/register",
+            "DownstreamPathTemplate": "/api/Auth/register",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "users-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "POST", "OPTIONS" ],
+            "UpstreamScheme": "http"
+        },
+        {
+            "UpstreamPathTemplate": "/gateway/Users/{userID}",
+            "DownstreamPathTemplate": "/api/Users/{userID}",
+            "DownstreamHostAndPorts": [
+                {
+                    "Host": "users-microservice",
+                    "Port": 8080
+                }
+            ],
+            "UpstreamHttpMethod": [ "GET", "OPTIONS" ],
             "UpstreamScheme": "http"
         }
     ],

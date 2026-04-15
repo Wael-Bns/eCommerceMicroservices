@@ -32,7 +32,7 @@ namespace OrdersMicroservice.Core.HttpClients
                     _logger.LogInformation("User data for UserID {UserID} found in cache.", userID);
                     return JsonSerializer.Deserialize<UserDTO>(cachedUserJson);
                 }
-                HttpResponseMessage response = await _httpClient.GetAsync($"/api/users/{userID}");
+                HttpResponseMessage response = await _httpClient.GetAsync($"/gateway/users/{userID}");
                 if (!response.IsSuccessStatusCode)
                 {
                     if(response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)

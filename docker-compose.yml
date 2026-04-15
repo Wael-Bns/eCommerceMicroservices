@@ -9,10 +9,8 @@ services:
       - MONGODB_HOST=mongodb-container
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=OrdersDatabase
-      - UsersMicroserviceName=users-microservice
-      - UsersMicroservicePort=8080
-      - ProductsMicroserviceName=products-microservice
-      - ProductsMicroservicePort=8080
+      - APIGATEWAY_HOST=api-gateway
+      - APIGATEWAY_PORT=8080
       - REDIS_HOST=redis-container
       - REDIS_PORT=6379  
     ports:

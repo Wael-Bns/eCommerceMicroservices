@@ -32,7 +32,7 @@ namespace OrdersMicroservice.Core.HttpClients
                     return JsonSerializer.Deserialize<ProductDTO>(cachedProduct);
                 }
                 // If not in cache, call the microservice
-                HttpResponseMessage response = await _httpClient.GetAsync($"/api/products/search/product-id/{productID}");
+                HttpResponseMessage response = await _httpClient.GetAsync($"/gateway/products/search/product-id/{productID}");
                 if (!response.IsSuccessStatusCode)
                 {
                     if(response.StatusCode == HttpStatusCode.ServiceUnavailable)
