@@ -3,6 +3,7 @@ using AutoMapper;
 using FluentValidation;
 using ProductsService.Core.DTO;
 using ProductsService.Core.Entities;
+using ProductsService.Core.RabbitMQ;
 using ProductsService.Core.RepositoryContracts;
 using ProductsService.Core.ServiceContracts;
 
@@ -14,12 +15,19 @@ namespace ProductsService.Core.Services
         private readonly IMapper _mapper;
         private readonly IValidator<ProductAddRequest> _productAddRequestValidator;
         private readonly IValidator<ProductUpdateRequest> _productUpdateRequestValidator;
-        public ProductService(IProductsRepository productsRepository, IMapper mapper, IValidator<ProductUpdateRequest> productUpdateRequestValidator, IValidator<ProductAddRequest> productAddRequestValidator)
+        private readonly IRabbitMQPublisher _rabbitMQPublisher;
+        public ProductService(
+            IProductsRepository productsRepository,
+            IMapper mapper,
+            IValidator<ProductUpdateRequest> productUpdateRequestValidator,
+            IValidator<ProductAddRequest> productAddRequestValidator,
+            IRabbitMQPublisher rabbitMQPublisher)
         {
             _productsRepository = productsRepository;
             _mapper = mapper;
             _productUpdateRequestValidator = productUpdateRequestValidator;
             _productAddRequestValidator = productAddRequestValidator;
+            _rabbitMQPublisher = rabbitMQPublisher;
         }
 
         public async Task<ProductResponse?> AddProduct(ProductAddRequest productAddRequest)
@@ -40,6 +48,11 @@ namespace ProductsService.Core.Services
 
         public async Task<bool> DeleteProduct(Guid productID)
         {
+            var existingProduct = await _productsRepository.GetProductByCondition(p => p.ProductID == productID);
+            if (existingProduct == null)
+            {
+                throw new ArgumentException("No product found with the given ProductID.", nameof(productID));
+            }
             bool isDeleted = await _productsRepository.DeleteProduct(productID);
             return isDeleted;
         }
@@ -77,9 +90,16 @@ namespace ProductsService.Core.Services
             {
                 throw new ArgumentNullException(nameof(productUpdateRequest), "ProductUpdateRequest object cannot be null.");
             }
+            var existingProduct = await _productsRepository.GetProductByCondition(p => p.ProductID == productUpdateRequest.ProductID);
+            if (existingProduct == null)
+            {
+                throw new ArgumentException("No product found with the given ProductID.", nameof(productUpdateRequest.ProductID));
+            }
 
             // make model validation on the productUpdateRequest object using FluentValidation
             await _productUpdateRequestValidator.ValidateAndThrowAsync(productUpdateRequest);
+
+            string routingKey = "product.update";
 
             Product? updatedProduct = await _productsRepository.UpdateProduct(_mapper.Map<Product>(productUpdateRequest));
             return _mapper.Map<ProductResponse?>(updatedProduct);
