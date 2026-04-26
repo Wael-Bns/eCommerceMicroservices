@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ProductsService.API.Filters;
 using ProductsService.Core.DTO;
 using ProductsService.Core.ServiceContracts;
@@ -24,7 +23,7 @@ namespace ProductsService.API.ApiEndpoints
             productsGroup.MapGet("/search/product-id/{productId}", async (Guid productId, IProductService productsService) =>
             {
                 ProductResponse? product = await productsService.GetProductByCondition(p => p.ProductID == productId);
-                if(product == null)
+                if (product == null)
                 {
                     return Results.NotFound($"No product found with the ID: {productId}");
                 }

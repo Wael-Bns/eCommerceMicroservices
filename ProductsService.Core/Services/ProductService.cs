@@ -99,7 +99,12 @@ namespace ProductsService.Core.Services
             // make model validation on the productUpdateRequest object using FluentValidation
             await _productUpdateRequestValidator.ValidateAndThrowAsync(productUpdateRequest);
 
-            string routingKey = "product.update";
+            string routingKey = "product.update.name";
+
+            if(existingProduct.ProductName != productUpdateRequest.ProductName)
+            {
+                _rabbitMQPublisher.PublishMessage(routingKey, productUpdateRequest.ProductID, "Product name updated");
+            }
 
             Product? updatedProduct = await _productsRepository.UpdateProduct(_mapper.Map<Product>(productUpdateRequest));
             return _mapper.Map<ProductResponse?>(updatedProduct);

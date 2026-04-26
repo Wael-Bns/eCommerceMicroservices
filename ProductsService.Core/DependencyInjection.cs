@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using ProductsService.Core.Mappers;
+using ProductsService.Core.RabbitMQ;
 using ProductsService.Core.ServiceContracts;
 using ProductsService.Core.Services;
 
@@ -17,6 +18,7 @@ namespace ProductsService.Core
             //Add AutoMapper profiles to the DI container
             services.AddScoped<IProductService, ProductService>();
             services.AddAutoMapper(typeof(ProductMappingProfile).Assembly);
+            services.AddTransient<IRabbitMQPublisher, RabbitMQPublisher>();
 
             return services;
         }

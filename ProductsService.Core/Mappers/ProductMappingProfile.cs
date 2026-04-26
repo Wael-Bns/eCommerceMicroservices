@@ -15,7 +15,7 @@ namespace ProductsService.Core.Mappers
                 .ForMember(dest => dest.Category, opt => opt.MapFrom(src => 
                     SystemEnum.Parse<CategoryOptions>(src.Category, true))) 
                 .ForMember(dest => dest.UnitPrice, opt => opt.MapFrom(src => src.UnitPrice))
-                .ForMember(dest => dest.QuantityStock, opt => opt.MapFrom(src => src.QuantityStock));
+                .ForMember(dest => dest.QuantityInStock, opt => opt.MapFrom(src => src.QuantityInStock));
         }
     }
 }
