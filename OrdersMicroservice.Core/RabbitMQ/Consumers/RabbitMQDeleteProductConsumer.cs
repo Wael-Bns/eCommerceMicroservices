@@ -34,12 +34,17 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                 _connection = await _connectionFactory.CreateConnectionAsync();
             }
             var channel = await _connection.CreateChannelAsync();
-            string routeKey = "product.delete";
-            string queueName = "orders.delete.queue";
+            //string routeKey = "product.#";
+            var headers = new Dictionary<string, object>
+                {
+                    {"x-match", "all" }, 
+                    { "event", "product.delete" }
+                };
+            string queueName = "orders.product.delete.queue";
             string exchangeName = _configuration["RABBITMQ_PRODUCTS_EXCHANGE"]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
-                type: ExchangeType.Direct,
+                type: ExchangeType.Headers,
                 durable: true
             );
             // create a message queue if it doesn't exist
@@ -53,7 +58,8 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             await channel.QueueBindAsync(
                 queue: queueName,
                 exchange: exchangeName,
-                routingKey: routeKey
+                routingKey: string.Empty,
+                arguments: headers!
             );
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (sender, args) =>
