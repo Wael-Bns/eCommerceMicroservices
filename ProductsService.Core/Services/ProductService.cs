@@ -4,8 +4,10 @@ using FluentValidation;
 using ProductsService.Core.DTO;
 using ProductsService.Core.Entities;
 using ProductsService.Core.RabbitMQ;
+using ProductsService.Core.RabbitMQ.Messages;
 using ProductsService.Core.RepositoryContracts;
 using ProductsService.Core.ServiceContracts;
+using RabbitMQ.Client;
 
 namespace ProductsService.Core.Services
 {
@@ -99,11 +101,15 @@ namespace ProductsService.Core.Services
             // make model validation on the productUpdateRequest object using FluentValidation
             await _productUpdateRequestValidator.ValidateAndThrowAsync(productUpdateRequest);
 
-            string routingKey = "product.update.name";
 
             if(existingProduct.ProductName != productUpdateRequest.ProductName)
             {
-                _rabbitMQPublisher.PublishMessage(routingKey, productUpdateRequest.ProductID, "Product name updated");
+                string routingKey = "product.update.name";
+                ProductNameUpdateMessage message = new ProductNameUpdateMessage(
+                    productUpdateRequest.ProductID,
+                    productUpdateRequest.ProductName
+                );
+                await _rabbitMQPublisher.PublishAsync<ProductNameUpdateMessage>(routingKey, message);
             }
 
             Product? updatedProduct = await _productsRepository.UpdateProduct(_mapper.Map<Product>(productUpdateRequest));
