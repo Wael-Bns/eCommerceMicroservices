@@ -16,11 +16,13 @@ namespace OrdersMicroservice.Core.RabbitMQ
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             await _rabbitMQProductNameUpdateConsumer.ConsumeAsync();
+            await _rabbitMQDeleteProductConsumer.ConsumeAsync();
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await _rabbitMQProductNameUpdateConsumer.DisposeAsync();
+            await _rabbitMQDeleteProductConsumer.DisposeAsync();
         }
     }
 }

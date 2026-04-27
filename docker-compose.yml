@@ -9,10 +9,17 @@ services:
       - MONGODB_HOST=mongodb-container
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=OrdersDatabase
-      - APIGATEWAY_HOST=api-gateway
-      - APIGATEWAY_PORT=8080
+      - UsersMicroserviceName=api-gateway
+      - UsersMicroservicePort=8080
+      - ProductsMicroserviceName=api-gateway
+      - ProductsMicroservicePort=8080
       - REDIS_HOST=redis-container
       - REDIS_PORT=6379  
+      - RABBITMQ_HOST=rabbitmq-container
+      - RABBITMQ_USERNAME=admin
+      - RABBITMQ_PASSWORD=admin
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_PRODUCTS_EXCHANGE=products.exchange
     ports:
       - "7000:8080"
     networks:
@@ -20,6 +27,7 @@ services:
       - ecommerce-network
     depends_on:
       - mongodb-container
+      - rabbitmq-container
 
   mongodb-container:
     image: mongo:latest
@@ -40,6 +48,11 @@ services:
         - MYSQL_PORT=3306
         - MYSQL_DATABASE=ProductsDb
         - MYSQL_USER=wael
+        - RABBITMQ_HOST=rabbitmq-container
+        - RABBITMQ_USERNAME=admin
+        - RABBITMQ_PASSWORD=admin
+        - RABBITMQ_PORT=5672
+        - RABBITMQ_EXCHANGE=products.exchange
     ports:
         - "6000:8080"
     networks:
@@ -47,6 +60,7 @@ services:
         - ecommerce-network
     depends_on:
         - mysql-container
+        - rabbitmq-container 
 
   mysql-container:
     image: mysql:latest
@@ -110,6 +124,16 @@ services:
     networks:
         - ecommerce-network
 
+  rabbitmq-container:
+    image: rabbitmq:3.13-management
+    ports:
+        - "5672:5672"
+        - "15672:15672"
+    environment:
+        - RABBITMQ_DEFAULT_USER=admin
+        - RABBITMQ_DEFAULT_PASS=admin
+    networks:
+        - ecommerce-network
 
 networks:
    orders-mongodb-network:

@@ -31,6 +31,7 @@ namespace OrdersMicroservice.Core
             });
 
             services.AddTransient<IRabbitMQProductNameUpdateConsumer, RabbitMQProductNameUpdateConsumer>();
+            services.AddTransient<IRabbitMQDeleteProductConsumer, RabbitMQDeleteProductConsumer>();
             services.AddHostedService<ProductHostedService>();
             return services;
         }
