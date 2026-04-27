@@ -24,7 +24,7 @@ namespace ProductsService.Core.RabbitMQ
                 Port = Convert.ToInt32(configuration["RABBITMQ_PORT"]!)
             };
         }
-        public async Task PublishAsync<T>(string routekey, T message)
+        public async Task PublishAsync<T>(Dictionary<string, object> headers, T message)
         {
             if(_connection == null || !_connection.IsOpen)
             {
@@ -36,20 +36,21 @@ namespace ProductsService.Core.RabbitMQ
             string exchangeName = _configuration["RABBITMQ_EXCHANGE"]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
-                type: ExchangeType.Direct,
+                type: ExchangeType.Headers,
                 durable: true
             );
             var properties = new BasicProperties
             {
-                Persistent = true
+                Persistent = true,
+                Headers = headers!
             };
             await channel.BasicPublishAsync(
                 exchange: exchangeName,
-                routingKey: routekey,
+                routingKey: string.Empty,
                 mandatory: false,
                 basicProperties: properties,
                 body: messageBytes);
-            _logger.LogInformation("message published to exchange {Exchange} with routing key {RouteKey}", exchangeName, routekey);
+            _logger.LogInformation("message published to exchange {Exchange} with headers {Headers}", exchangeName, headers);
         }
         public async ValueTask DisposeAsync()
         {

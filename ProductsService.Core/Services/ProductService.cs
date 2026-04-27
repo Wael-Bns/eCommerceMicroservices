@@ -7,7 +7,6 @@ using ProductsService.Core.RabbitMQ;
 using ProductsService.Core.RabbitMQ.Messages;
 using ProductsService.Core.RepositoryContracts;
 using ProductsService.Core.ServiceContracts;
-using RabbitMQ.Client;
 
 namespace ProductsService.Core.Services
 {
@@ -58,9 +57,12 @@ namespace ProductsService.Core.Services
             bool isDeleted = await _productsRepository.DeleteProduct(productID);
             if(isDeleted)
             {
-                string routingKey = "product.delete";
+                var headers = new Dictionary<string, object>
+                {
+                    { "event", "product.delete" }
+                };
                 ProductDeleteMessage message = new ProductDeleteMessage(productID);
-                await _rabbitMQPublisher.PublishAsync<ProductDeleteMessage>(routingKey, message);
+                await _rabbitMQPublisher.PublishAsync<ProductDeleteMessage>(headers, message);
             }
             return isDeleted;
         }
@@ -110,12 +112,16 @@ namespace ProductsService.Core.Services
 
             if(existingProduct.ProductName != productUpdateRequest.ProductName)
             {
-                string routingKey = "product.update.name";
+                var headers = new Dictionary<string, object>
+                {
+                    { "event", "product.update" },
+                    { "field", "ProductName"  }
+                };
                 ProductNameUpdateMessage message = new ProductNameUpdateMessage(
                     productUpdateRequest.ProductID,
                     productUpdateRequest.ProductName
                 );
-                await _rabbitMQPublisher.PublishAsync<ProductNameUpdateMessage>(routingKey, message);
+                await _rabbitMQPublisher.PublishAsync<ProductNameUpdateMessage>(headers, message);
             }
 
             Product? updatedProduct = await _productsRepository.UpdateProduct(_mapper.Map<Product>(productUpdateRequest));
