@@ -56,6 +56,12 @@ namespace ProductsService.Core.Services
                 throw new ArgumentException("No product found with the given ProductID.", nameof(productID));
             }
             bool isDeleted = await _productsRepository.DeleteProduct(productID);
+            if(isDeleted)
+            {
+                string routingKey = "product.delete";
+                ProductDeleteMessage message = new ProductDeleteMessage(productID);
+                await _rabbitMQPublisher.PublishAsync<ProductDeleteMessage>(routingKey, message);
+            }
             return isDeleted;
         }
 

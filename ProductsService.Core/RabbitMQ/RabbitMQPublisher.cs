@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace ProductsService.Core.RabbitMQ
@@ -8,9 +9,13 @@ namespace ProductsService.Core.RabbitMQ
     public class RabbitMQPublisher : IRabbitMQPublisher, IAsyncDisposable
     {
         private readonly ConnectionFactory _connectionFactory;
+        private readonly IConfiguration _configuration;
         private IConnection? _connection;
-        public RabbitMQPublisher(IConfiguration configuration)
+        private readonly ILogger<RabbitMQPublisher> _logger;
+        public RabbitMQPublisher(IConfiguration configuration, ILogger<RabbitMQPublisher> logger)
         {
+            _configuration = configuration;
+            _logger = logger;
             _connectionFactory = new ConnectionFactory
             {
                 HostName = configuration["RABBITMQ_HOST"]!,
@@ -28,7 +33,7 @@ namespace ProductsService.Core.RabbitMQ
             await using var channel = await _connection.CreateChannelAsync();
             string messageJson = JsonSerializer.Serialize(message);
             byte[] messageBytes = Encoding.UTF8.GetBytes(messageJson);
-            string exchangeName = "products.exchange";
+            string exchangeName = _configuration["RABBITMQ_EXCHANGE"]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
                 type: ExchangeType.Direct,
@@ -44,6 +49,7 @@ namespace ProductsService.Core.RabbitMQ
                 mandatory: false,
                 basicProperties: properties,
                 body: messageBytes);
+            _logger.LogInformation("message published to exchange {Exchange} with routing key {RouteKey}", exchangeName, routekey);
         }
         public async ValueTask DisposeAsync()
         {
