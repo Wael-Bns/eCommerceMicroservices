@@ -2,6 +2,9 @@
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OrdersMicroservice.Core.RabbitMQ;
+using OrdersMicroservice.Core.RabbitMQ.ConsumerContracts;
+using OrdersMicroservice.Core.RabbitMQ.Consumers;
 using OrdersMicroservice.Core.ServiceContracts;
 using OrdersMicroservice.Core.Services;
 using OrdersMicroservice.Core.Validators;
@@ -26,6 +29,9 @@ namespace OrdersMicroservice.Core
                 string redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
                 options.Configuration = $"{redisHost}:{redisPort}"; 
             });
+
+            services.AddTransient<IRabbitMQProductNameUpdateConsumer, RabbitMQProductNameUpdateConsumer>();
+            services.AddHostedService<ProductHostedService>();
             return services;
         }
     }

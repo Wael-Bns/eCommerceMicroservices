@@ -44,8 +44,8 @@ builder.Services.AddTransient<IProductsMicroservicePolicies, ProductsMicroservic
 // Add UsersMicroservice Http client
 builder.Services.AddHttpClient<UsersMicroserviceClient>(client =>
 {
-    client.BaseAddress = new Uri($"http://{builder.Configuration["APIGATEWAY_HOST"]}" +
-        $":{builder.Configuration["APIGATEWAY_PORT"]}");
+    client.BaseAddress = new Uri($"http://{builder.Configuration["UsersMicroserviceName"]}" +
+        $":{builder.Configuration["UsersMicroservicePort"]}");
 }).AddPolicyHandler(
     builder.Services.BuildServiceProvider()
     .GetRequiredService<IUsersMicroservicePolicies>().GetCombinedPolicy()
@@ -53,8 +53,8 @@ builder.Services.AddHttpClient<UsersMicroserviceClient>(client =>
 // Add ProductsMicroservice Http client
 builder.Services.AddHttpClient<ProductsMicroserviceClient>(client =>
 {
-    client.BaseAddress = new Uri($"http://{builder.Configuration["APIGATEWAY_HOST"]}" +
-        $":{builder.Configuration["APIGATEWAY_PORT"]}");
+    client.BaseAddress = new Uri($"http://{builder.Configuration["ProductsMicroserviceName"]}" +
+        $":{builder.Configuration["ProductsMicroservicePort"]}");
 }).AddPolicyHandler(
     builder.Services.BuildServiceProvider()
     .GetRequiredService<IProductsMicroservicePolicies>().GetCombinedPolicy()
