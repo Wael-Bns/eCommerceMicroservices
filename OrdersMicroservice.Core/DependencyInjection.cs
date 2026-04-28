@@ -30,7 +30,7 @@ namespace OrdersMicroservice.Core
                 options.Configuration = $"{redisHost}:{redisPort}"; 
             });
 
-            services.AddTransient<IRabbitMQProductNameUpdateConsumer, RabbitMQProductNameUpdateConsumer>();
+            services.AddTransient<IRabbitMQProductNameUpdateConsumer, RabbitMQProductUpdateConsumer>();
             services.AddTransient<IRabbitMQDeleteProductConsumer, RabbitMQDeleteProductConsumer>();
             services.AddHostedService<ProductHostedService>();
             return services;

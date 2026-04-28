@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using DnsClient.Internal;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrdersMicroservice.Core.RabbitMQ.ConsumerContracts;
@@ -10,15 +11,17 @@ using RabbitMQ.Client.Events;
 
 namespace OrdersMicroservice.Core.RabbitMQ.Consumers
 {
-    public class RabbitMQProductNameUpdateConsumer : IRabbitMQProductNameUpdateConsumer
+    public class RabbitMQProductUpdateConsumer : IRabbitMQProductNameUpdateConsumer
     {
         private readonly ConnectionFactory _connectionFactory;
         private readonly IConfiguration _configuration;
         private IConnection? _connection;
-        private readonly ILogger<RabbitMQProductNameUpdateConsumer> _logger;
-        public RabbitMQProductNameUpdateConsumer(IConfiguration configuration, ILogger<RabbitMQProductNameUpdateConsumer> logger)
+        private readonly ILogger<RabbitMQProductUpdateConsumer> _logger;
+        private readonly IDistributedCache _distributedCache;
+        public RabbitMQProductUpdateConsumer(IConfiguration configuration, ILogger<RabbitMQProductUpdateConsumer> logger, IDistributedCache distributedCache)
         {
             _configuration = configuration;
+            _distributedCache = distributedCache;
             _connectionFactory = new ConnectionFactory
             {
                 HostName = configuration["RABBITMQ_HOST"]!,
@@ -36,19 +39,13 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             }
             var channel = await _connection.CreateChannelAsync();
 
-            //string routeKey = "product.update.*";
-            var headers = new Dictionary<string, object>
-                {
-                    {"x-match", "all" }, 
-                    { "event", "product.update" },
-                    { "field", "ProductName"  }
-                };
+            string routingKey = "product.update";
             string queueName = "orders.update.queue";
 
             string exchangeName = _configuration["RABBITMQ_PRODUCTS_EXCHANGE"]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
-                type: ExchangeType.Headers,
+                type: ExchangeType.Direct,
                 durable: true
             );
             // create a message queue if it doesn't exist
@@ -62,8 +59,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             await channel.QueueBindAsync(
                 queue: queueName,
                 exchange: exchangeName,
-                routingKey: string.Empty,
-                arguments: headers!
+                routingKey: routingKey
             );
 
             AsyncEventingBasicConsumer consumer = new AsyncEventingBasicConsumer(channel);
@@ -72,12 +68,22 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                 try
                 {
                     string message = Encoding.UTF8.GetString(args.Body.ToArray());
-                    var productUpdate = JsonSerializer.Deserialize<ProductNameUpdateMessage>(message);
-                    _logger.LogInformation("Received product name update message: {Message}", message);
+                    var productUpdate = JsonSerializer.Deserialize<ProductUpdateMessage>(message);
+                    _logger.LogInformation("Received product update message: {Message}", message);
+                    string? cacheKey = "product_" + productUpdate.ProductID.ToString();
+                    var cacheOptions = new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+                    };
+                    if(_distributedCache.GetAsync(cacheKey) != null)
+                    {
+                        await _distributedCache.SetAsync(cacheKey, JsonSerializer.SerializeToUtf8Bytes(productUpdate), cacheOptions);
+                        _logger.LogInformation("Updated cache for ProductID: {ProductID}", productUpdate.ProductID);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error processing product name update message");
+                    _logger.LogError(ex, "Error processing product update message");
                 }
             };
             await channel.BasicConsumeAsync(

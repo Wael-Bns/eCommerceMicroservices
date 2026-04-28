@@ -1,5 +1,6 @@
 ﻿
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrdersMicroservice.Core.RabbitMQ.ConsumerContracts;
@@ -14,11 +15,13 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
         private readonly ILogger<RabbitMQDeleteProductConsumer> _logger;
         private readonly ConnectionFactory _connectionFactory;
         private readonly IConfiguration _configuration;
+        private readonly IDistributedCache _distributedCache;
         private IConnection? _connection;
-        public RabbitMQDeleteProductConsumer(IConfiguration configuration, ILogger<RabbitMQDeleteProductConsumer> logger)
+        public RabbitMQDeleteProductConsumer(IConfiguration configuration, ILogger<RabbitMQDeleteProductConsumer> logger, IDistributedCache distributedCache)
         {
             _configuration = configuration;
             _logger = logger;
+            _distributedCache = distributedCache;
             _connectionFactory = new ConnectionFactory
             {
                 HostName = configuration["RABBITMQ_HOST"]!,
@@ -34,17 +37,12 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                 _connection = await _connectionFactory.CreateConnectionAsync();
             }
             var channel = await _connection.CreateChannelAsync();
-            //string routeKey = "product.#";
-            var headers = new Dictionary<string, object>
-                {
-                    {"x-match", "all" }, 
-                    { "event", "product.delete" }
-                };
+            string routingKey = "product.delete";
             string queueName = "orders.product.delete.queue";
             string exchangeName = _configuration["RABBITMQ_PRODUCTS_EXCHANGE"]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
-                type: ExchangeType.Headers,
+                type: ExchangeType.Direct,
                 durable: true
             );
             // create a message queue if it doesn't exist
@@ -58,8 +56,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             await channel.QueueBindAsync(
                 queue: queueName,
                 exchange: exchangeName,
-                routingKey: string.Empty,
-                arguments: headers!
+                routingKey: routingKey
             );
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.ReceivedAsync += async (sender, args) =>
@@ -69,6 +66,9 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                     string message = System.Text.Encoding.UTF8.GetString(args.Body.ToArray());
                     ProductDeleteMessage productDeleteMessage = JsonSerializer.Deserialize<ProductDeleteMessage>(message)!;
                     _logger.LogInformation("Received delete product message: {ProductID}", productDeleteMessage.ProductID);
+                    string? cacheKey = "product_" + productDeleteMessage.ProductID.ToString();
+                    await _distributedCache.RemoveAsync(cacheKey);
+                    _logger.LogInformation("Removed product with ID {ProductID} from cache", productDeleteMessage.ProductID);
                 }
                 catch (Exception ex)
                 {
