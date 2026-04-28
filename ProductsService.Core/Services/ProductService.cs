@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using AutoMapper;
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using ProductsService.Core.DTO;
 using ProductsService.Core.Entities;
 using ProductsService.Core.RabbitMQ;
@@ -17,18 +18,21 @@ namespace ProductsService.Core.Services
         private readonly IValidator<ProductAddRequest> _productAddRequestValidator;
         private readonly IValidator<ProductUpdateRequest> _productUpdateRequestValidator;
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
+        private readonly ILogger<ProductService> _logger;
         public ProductService(
             IProductsRepository productsRepository,
             IMapper mapper,
             IValidator<ProductUpdateRequest> productUpdateRequestValidator,
             IValidator<ProductAddRequest> productAddRequestValidator,
-            IRabbitMQPublisher rabbitMQPublisher)
+            IRabbitMQPublisher rabbitMQPublisher,
+            ILogger<ProductService> logger)
         {
             _productsRepository = productsRepository;
             _mapper = mapper;
             _productUpdateRequestValidator = productUpdateRequestValidator;
             _productAddRequestValidator = productAddRequestValidator;
             _rabbitMQPublisher = rabbitMQPublisher;
+            _logger = logger;
         }
 
         public async Task<ProductResponse?> AddProduct(ProductAddRequest productAddRequest)
@@ -57,12 +61,10 @@ namespace ProductsService.Core.Services
             bool isDeleted = await _productsRepository.DeleteProduct(productID);
             if(isDeleted)
             {
-                var headers = new Dictionary<string, object>
-                {
-                    { "event", "product.delete" }
-                };
+                string routingKey = "product.delete";
                 ProductDeleteMessage message = new ProductDeleteMessage(productID);
-                await _rabbitMQPublisher.PublishAsync<ProductDeleteMessage>(headers, message);
+                await _rabbitMQPublisher.PublishAsync<ProductDeleteMessage>(routingKey, message);
+                _logger.LogInformation("Product delete message published for ProductID: {ProductID}", productID);
             }
             return isDeleted;
         }
@@ -109,19 +111,25 @@ namespace ProductsService.Core.Services
             // make model validation on the productUpdateRequest object using FluentValidation
             await _productUpdateRequestValidator.ValidateAndThrowAsync(productUpdateRequest);
 
+            // TODO : UPDATE THIS TO BE MORE GENERIC IN THE FUTURE (LIKE MAKING A MAPPING AND COMPARING USING EQUALS METHOD)
+            bool isIdentical = existingProduct.ProductName == productUpdateRequest.ProductName
+                && existingProduct.Category == productUpdateRequest.Category.ToString()
+                && existingProduct.UnitPrice == productUpdateRequest.UnitPrice
+                && existingProduct.QuantityInStock == productUpdateRequest.QuantityInStock;
 
-            if(existingProduct.ProductName != productUpdateRequest.ProductName)
+            if (!isIdentical)
             {
-                var headers = new Dictionary<string, object>
-                {
-                    { "event", "product.update" },
-                    { "field", "ProductName"  }
-                };
-                ProductNameUpdateMessage message = new ProductNameUpdateMessage(
+                string routingKey = "product.update";
+                ProductUpdateMessage productUpdateMessage = new ProductUpdateMessage
+                (
                     productUpdateRequest.ProductID,
-                    productUpdateRequest.ProductName
+                    productUpdateRequest.ProductName,
+                    productUpdateRequest.Category.ToString(),
+                    productUpdateRequest.UnitPrice ?? 0,
+                    productUpdateRequest.QuantityInStock ?? 0
                 );
-                await _rabbitMQPublisher.PublishAsync<ProductNameUpdateMessage>(headers, message);
+                await _rabbitMQPublisher.PublishAsync<ProductUpdateMessage>(routingKey, productUpdateMessage);
+                _logger.LogInformation("Product update message published for ProductID: {ProductID}", productUpdateRequest.ProductID);
             }
 
             Product? updatedProduct = await _productsRepository.UpdateProduct(_mapper.Map<Product>(productUpdateRequest));

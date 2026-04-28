@@ -11,6 +11,6 @@
         /// <typeparam name="T">the type of the message to be published</typeparam>
         /// <param name="routekey">the routing key to use for the message</param>
         /// <param name="message">the message to be published</param>
-        Task PublishAsync<T>(Dictionary<string, object> headers, T message);
+        Task PublishAsync<T>(string routingKey, T message);
     }
 }
