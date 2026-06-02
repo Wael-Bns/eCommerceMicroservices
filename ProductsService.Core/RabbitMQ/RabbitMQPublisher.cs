@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ProductsService.Core.RabbitMQ.Options;
 using RabbitMQ.Client;
 
 namespace ProductsService.Core.RabbitMQ
@@ -18,10 +19,10 @@ namespace ProductsService.Core.RabbitMQ
             _logger = logger;
             _connectionFactory = new ConnectionFactory
             {
-                HostName = configuration["RABBITMQ_HOST"]!,
-                UserName = configuration["RABBITMQ_USERNAME"]!,
-                Password = configuration["RABBITMQ_PASSWORD"]!,
-                Port = Convert.ToInt32(configuration["RABBITMQ_PORT"]!)
+                HostName = configuration[RabbitMqNamings.Host]!,
+                UserName = configuration[RabbitMqNamings.Username]!,
+                Password = configuration[RabbitMqNamings.Password]!,
+                Port = Convert.ToInt32(configuration[RabbitMqNamings.Port]!)
             };
         }
         public async Task PublishAsync<T>(string routingKey, T message)
@@ -33,7 +34,7 @@ namespace ProductsService.Core.RabbitMQ
             await using var channel = await _connection.CreateChannelAsync();
             string messageJson = JsonSerializer.Serialize(message);
             byte[] messageBytes = Encoding.UTF8.GetBytes(messageJson);
-            string exchangeName = _configuration["RABBITMQ_EXCHANGE"]!;
+            string exchangeName = _configuration[RabbitMqNamings.Exchange]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
                 type: ExchangeType.Direct,
