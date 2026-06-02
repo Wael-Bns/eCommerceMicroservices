@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrdersMicroservice.Core.RabbitMQ.ConsumerContracts;
 using OrdersMicroservice.Core.RabbitMQ.Messages;
+using OrdersMicroservice.Core.RabbitMQ.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -24,10 +25,10 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             _distributedCache = distributedCache;
             _connectionFactory = new ConnectionFactory
             {
-                HostName = configuration["RABBITMQ_HOST"]!,
-                UserName = configuration["RABBITMQ_USERNAME"]!,
-                Password = configuration["RABBITMQ_PASSWORD"]!,
-                Port = Convert.ToInt32(configuration["RABBITMQ_PORT"]!)
+                HostName = configuration[RabbitMqNamings.Host]!,
+                UserName = configuration[RabbitMqNamings.Username]!,
+                Password = configuration[RabbitMqNamings.Password]!,
+                Port = Convert.ToInt32(configuration[RabbitMqNamings.Port]!)
             };
         }
         public async Task ConsumeAsync()
@@ -39,7 +40,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             var channel = await _connection.CreateChannelAsync();
             string routingKey = "product.delete";
             string queueName = "orders.product.delete.queue";
-            string exchangeName = _configuration["RABBITMQ_PRODUCTS_EXCHANGE"]!;
+            string exchangeName = _configuration[RabbitMqNamings.ProductsExchange]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
                 type: ExchangeType.Direct,

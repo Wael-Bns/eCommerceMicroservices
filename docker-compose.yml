@@ -52,7 +52,7 @@ services:
         - RABBITMQ_USERNAME=admin
         - RABBITMQ_PASSWORD=admin
         - RABBITMQ_PORT=5672
-        - RABBITMQ_EXCHANGE=products.exchange
+        - RABBITMQ_PRODUCTS_EXCHANGE=products.exchange
     ports:
         - "6000:8080"
     networks:

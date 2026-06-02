@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrdersMicroservice.Core.RabbitMQ.ConsumerContracts;
 using OrdersMicroservice.Core.RabbitMQ.Messages;
+using OrdersMicroservice.Core.RabbitMQ.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -24,12 +25,24 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             _distributedCache = distributedCache;
             _connectionFactory = new ConnectionFactory
             {
-                HostName = configuration["RABBITMQ_HOST"]!,
-                UserName = configuration["RABBITMQ_USERNAME"]!,
-                Password = configuration["RABBITMQ_PASSWORD"]!,
-                Port = Convert.ToInt32(configuration["RABBITMQ_PORT"]!)
+                HostName = configuration[RabbitMqNamings.Host]!,
+                UserName = configuration[RabbitMqNamings.Username]!,
+                Password = configuration[RabbitMqNamings.Password]!,
+                Port = Convert.ToInt32(configuration[RabbitMqNamings.Port]!)
             };
             _logger = logger;
+        }
+        private async Task HandleCacheUpdate(ProductUpdateMessage productUpdateMessage)
+        {
+            string? cacheKey = "product_" + productUpdateMessage.ProductID.ToString();
+            var cacheOptions = new DistributedCacheEntryOptions()
+                                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(300))
+                                    .SetSlidingExpiration(TimeSpan.FromSeconds(100));
+            if (_distributedCache.GetAsync(cacheKey) != null)
+            {
+                await _distributedCache.SetAsync(cacheKey, JsonSerializer.SerializeToUtf8Bytes(productUpdateMessage), cacheOptions);
+                _logger.LogInformation("Updated cache for ProductID: {ProductID}", productUpdateMessage.ProductID);
+            }
         }
         public async Task ConsumeAsync()
         {
@@ -42,7 +55,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
             string routingKey = "product.update";
             string queueName = "orders.update.queue";
 
-            string exchangeName = _configuration["RABBITMQ_PRODUCTS_EXCHANGE"]!;
+            string exchangeName = _configuration[RabbitMqNamings.ProductsExchange]!;
             await channel.ExchangeDeclareAsync(
                 exchange: exchangeName,
                 type: ExchangeType.Direct,
@@ -70,16 +83,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                     string message = Encoding.UTF8.GetString(args.Body.ToArray());
                     var productUpdate = JsonSerializer.Deserialize<ProductUpdateMessage>(message);
                     _logger.LogInformation("Received product update message: {Message}", message);
-                    string? cacheKey = "product_" + productUpdate.ProductID.ToString();
-                    var cacheOptions = new DistributedCacheEntryOptions
-                    {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
-                    };
-                    if(_distributedCache.GetAsync(cacheKey) != null)
-                    {
-                        await _distributedCache.SetAsync(cacheKey, JsonSerializer.SerializeToUtf8Bytes(productUpdate), cacheOptions);
-                        _logger.LogInformation("Updated cache for ProductID: {ProductID}", productUpdate.ProductID);
-                    }
+                    await HandleCacheUpdate(productUpdate!);
                 }
                 catch (Exception ex)
                 {
@@ -91,6 +95,7 @@ namespace OrdersMicroservice.Core.RabbitMQ.Consumers
                 autoAck: true,
                 consumer: consumer);
         }
+        
         public async ValueTask DisposeAsync()
         {
             if (_connection != null)
